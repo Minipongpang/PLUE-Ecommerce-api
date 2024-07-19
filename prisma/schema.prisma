@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+ id          Int      @id @default(autoincrement())
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  phoneNumber String
+  address     String
+  isAdmin     Boolean  @default(false)
+
+  cartItems   CartItem[]
+  orders      Order[]
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  productName   String   @unique
+  gender        Gender   // Enum type
+  productType   ProductType  // Enum type
+  description   String @db.Text()
+  quantity      Int      @default(0)
+  price         Float    @default(0.0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime?
+  productImage1 String @db.Text()
+  productImage2 String? @db.Text()
+  productImage3 String? @db.Text()
+  productImage4 String? @db.Text()
+  productImage5 String? @db.Text()
+  productImage6 String? @db.Text()
+
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+}
+
+model CartItem {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  productId  Int
+  amount   Int      @default(1)
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  status        OrderPendingStatus @default(PENDING)
+  paymentStatus OrderPaymentStatus @default(PENDING)
+  eSlip         String?
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems    OrderItem[]
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  amount    Int      @default(1)
+  price     Decimal  @default("0.00")
+  createdAt DateTime @default(now())
+
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+ enum ProductType {
+    SHIRTS
+    PANTS
+    JACKETS
+    ACCESSORIES
+  }
+
+enum OrderPendingStatus {
+  PENDING
+  PACKED
+  OUT_FOR_DELIVERY
+  DELIVERED
+}
+
+enum OrderPaymentStatus {
+  PENDING
+  PAID
+}
+
+enum Gender {
+    MEN
+    WOMEN
+    KIDS
+  }
